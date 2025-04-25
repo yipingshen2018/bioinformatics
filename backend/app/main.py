@@ -13,8 +13,11 @@ async def submit_fasta(file: UploadFile = File(...)):
     os.makedirs("storage/inputs", exist_ok=True)
     with open(input_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    pdb_path = send_to_runpod(input_path)
-    return {"pdb_path": pdb_path}
+    pdb_path = send_to_runpod(input_path,job_id)
+    return {
+        "job_id": job_id,
+        "pdb_path": pdb_path  # 这个是本地下载回来的结果路径
+    }
 
 @app.get("/status/{task_id}")
 def get_status(task_id: str):
@@ -30,9 +33,4 @@ def get_result(task_id: str):
 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
-    filepath = f"storage/inputs/{file.filename}"
-    with open(filepath, "wb") as f:
-        f.write(await file.read())
-
-    result = send_to_runpod(filepath)
-    return {"result": result}
+    return await submit_fasta(file)
