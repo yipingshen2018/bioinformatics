@@ -23,6 +23,10 @@ protein-predict-platform/
 └── README.md               # This documentation
 ```
 
+## 🧬 System Architecture
+
+![System Architecture](docs/architecture.png)
+
 ---
 
 ## 🔁 Workflow Overview
