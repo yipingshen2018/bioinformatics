@@ -20,12 +20,17 @@ services:
       - redis
 
   worker:
-    build: ./worker
+    build:
+      context: .
+      dockerfile: worker.Dockerfile
     platform: linux/amd64
+
     volumes:
       - ./storage:/app/storage
+      - ${HOME}/.ssh:/root/.ssh:ro 
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SSH_KEY_PATH=/root/.ssh/id_ed25519
     depends_on:
       - redis

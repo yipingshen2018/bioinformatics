@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from celery.result import AsyncResult
-from tasks import send_to_runpod
+from tasks import run_prediction  # 你在 tasks.py 里定义的 Celery 任务
+
 import shutil, os
 import uuid
 
@@ -13,24 +14,44 @@ async def submit_fasta(file: UploadFile = File(...)):
     os.makedirs("storage/inputs", exist_ok=True)
     with open(input_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    pdb_path = send_to_runpod(input_path,job_id)
+    task = run_prediction.delay(input_path, job_id)
+
     return {
-        "job_id": job_id,
-        "pdb_path": pdb_path  # 这个是本地下载回来的结果路径
+        "task_id": task.id,
+        "job_id": job_id
     }
 
-@app.get("/status/{task_id}")
-def get_status(task_id: str):
-    result = AsyncResult(task_id)
-    return {"status": result.status}
+@app.get("/status/{job_id}")
+def get_status(job_id: str):
+    done_file = os.path.join("storage/outputs", job_id, "ExampleProtein.done.txt")
 
-@app.get("/result/{task_id}")
-def get_result(task_id: str):
-    result = AsyncResult(task_id)
-    if result.status == 'SUCCESS':
-        return {"pdb_path": f"/storage/outputs/{result.result}/ranked_0.pdb"}
-    return {"status": result.status}
+    if os.path.exists(done_file):
+        return {"status": "COMPLETED"}
+    elif os.path.exists(output_dir):
+        return {"status": "RUNNING"}
+    else:
+        return {"status": "PENDING"}
+
+
+@app.get("/result/{job_id}")
+def get_result(job_id: str):
+    output_path = f"storage/outputs/{job_id}/ranked_0.pdb"
+    if os.path.exists(output_path):
+        return {"pdb_path": output_path}
+    else:
+        return {"error": "Result not ready yet."}
+
 
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
     return await submit_fasta(file)
+
+@app.get("/status/{job_id}")
+def get_status(job_id: str):
+    output_dir = f"storage/outputs/{job_id}/"
+    done_file = os.path.join(output_dir, "ExampleProtein.done.txt")
+    if os.path.exists(done_file):
+        return {"status": "COMPLETED"}
+    if os.path.exists(output_dir):
+        return {"status": "RUNNING"}
+    return {"status": "PENDING"}
