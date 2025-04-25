@@ -1,0 +1,8 @@
+2025-04-19 21:50:43,225 Running colabfold 1.5.5
+2025-04-19 21:50:43,312 Unable to initialize backend 'cuda': FAILED_PRECONDITION: No visible GPU devices.
+2025-04-19 21:50:43,313 Unable to initialize backend 'rocm': NOT_FOUND: Could not find registered platform with name: "rocm". Available platform names are: Interpreter CUDA
+2025-04-19 21:50:43,314 Unable to initialize backend 'tpu': module 'jaxlib.xla_extension' has no attribute 'get_tpu_client'
+2025-04-19 21:50:43,316 WARNING: no GPU detected, will be using CPU
+2025-04-19 21:50:46,037 Found 5 citations for tools or databases
+2025-04-19 21:50:46,038 Query 1/1: ExampleProtein (length 49)
+2025-04-19 21:50:48,902 Setting max_seq=512, max_extra_seq=5120

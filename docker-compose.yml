@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:6.2
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./backend
+    volumes:
+      - ./storage:/app/storage
+      - ~/.ssh:/root/.ssh:ro
+    ports:
+      - "8000:8000"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SSH_KEY_PATH=/root/.ssh/id_ed25519
+    depends_on:
+      - redis
+
+  worker:
+    build: ./worker
+    platform: linux/amd64
+    volumes:
+      - ./storage:/app/storage
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
